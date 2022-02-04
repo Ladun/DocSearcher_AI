@@ -12,14 +12,14 @@ class ModelInference:
         self.query_tok = query_tok
         self.doc_tok = doc_tok
 
-    def query_from_text(self, text):
+    def query_from_texts(self, text):
         Q_ids, Q_mask = self.query_tok.tensorize(text)
 
         Q = self.colbert.query(Q_ids, Q_mask)
 
         return Q
 
-    def doc_from_text(self, text):
+    def doc_from_texts(self, text):
         D_ids, D_mask = self.doc_tok.tensorize(text)
 
         D = self.colbert.query(D_ids, D_mask)
