@@ -30,9 +30,5 @@ class ModelInference:
         D_ids, D_mask = self.doc_tok.tensorize(text)
 
         with torch.no_grad():
-            D = self.colbert.query(D_ids, D_mask)
+            D = self.colbert.doc(D_ids, D_mask)
         return D
-
-    def retrieval(self, query):
-        pass
-
