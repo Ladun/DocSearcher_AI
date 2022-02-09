@@ -1,6 +1,9 @@
-#Novel Searcher
+# Novel Searcher
 
 ---
+
+"Project Under Development"
+
 Nobel searcher is a document search application using colBERT.
 
 ## Preprocess data
