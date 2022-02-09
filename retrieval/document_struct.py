@@ -36,6 +36,7 @@ class DocumentStruct:
         logger.info(f"len(self.emb2pid) ={len(self.emb2pid)}")
 
     def construct_index(self):
+        logger.info(f"Create index {self.title}")
         dim = self.embeddings[0].shape[-1]
         self.index = faiss.IndexFlatL2(dim)
         self.index.add(self.embeddings)
@@ -106,6 +107,7 @@ class DocumentStruct:
     def embedding_ids_to_pids(self, embedding_ids):
         # Find unique PIDs per query.
         logger.info("#> Lookup the PIDs..")
+        print(embedding_ids)
         all_pids = self.emb2pid[embedding_ids]
 
         logger.info(f"#> Converting to a list [shape = {all_pids.size()}]..")

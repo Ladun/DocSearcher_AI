@@ -49,7 +49,7 @@ def load_components(args):
     doc_tok = DocTokenizer(doc_maxlen=args.doc_maxlen, tokenizer=base_tokenizer)
 
     # Load dataset
-    train_dataset = SearcherDataset(dataset_path="data/test.tsv",
+    train_dataset = SearcherDataset(dataset_path=args.train_file,
                                     query_tokenizer=query_tok,
                                     doc_tokenizer=doc_tok)
     train_sampler = RandomSampler(train_dataset)

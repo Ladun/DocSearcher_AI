@@ -1,26 +1,34 @@
-
-
-# Preprocess data
+#Novel Searcher
 
 ---
+Nobel searcher is a document search application using colBERT.
+
+## Preprocess data
+
 ```
 python utils/preprocess_raw.py 
 ```
 
-# Training
+## Training
 
----
 
-# Retrieval
+```
+python train.py --train_file=/path/to/train_file 
+```
+## Retrieval
 
----
-## Construct index
-
----
-
-## Do retrieval
-
----
+### Construct index
+Index must be created in advance before retrieval. Index uses faiss to store indexes for each document.
 ```
 
 ```
+
+### Do retrieval
+
+```
+
+```
+
+## Reference
+
+- [ColBERT](https://github.com/stanford-futuredata/ColBERT)

@@ -68,8 +68,11 @@ class RetrievalModule:
         for file in files:
             logger.info(f"Load document struct from {file}")
             doc_struct = DocumentStruct.load_documents(file)
-            if os.path.exists(file.split(".")[0] + ".index"):
-                doc_struct.load_index(file.split(".")[0] + ".index")
+
+            index_path = file.split(".")[0] + ".index"
+            if os.path.exists(index_path):
+                logger.info(f"Load document struct index from {index_path}")
+                doc_struct.load_index(index_path)
             else:
                 doc_struct.construct_index()
             self.documents[doc_struct.title] = doc_struct

@@ -25,7 +25,7 @@ class Arguments:
 
     def add_model_training_parameters(self):
         self.parser.add_argument('--train_file', type=str, required=True,
-                                 help='train dataset file path')
+                                 help='train dataset file path, ex)data/train_file.tsv')
         self.parser.add_argument('--pretrained_path', type=str, default='bert-base-multilingual-uncased')
 
         self.parser.add_argument('--batch_size', default=32, type=int)
