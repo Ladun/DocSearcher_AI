@@ -44,7 +44,7 @@ class Arguments:
 
     def parse(self):
         args = self.parser.parse_args()
-        args.device = torch.device("cuda" if torch.cuda.is_available() and args.no_cuda else "cpu")
+        args.device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
 
         return args
 

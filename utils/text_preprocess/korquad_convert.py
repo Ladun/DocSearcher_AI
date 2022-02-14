@@ -25,9 +25,9 @@ def preprocessing_korquad(file, minimum_len):
         qas = data['qas']
 
         for j, q in enumerate(qas):
-            query = q['question']
+            query = _cleansing(q['question'])
             pos = _cleansing(q['answer']['text'])
-            if len(pos) >= minimum_len:
+            if len(pos) >= minimum_len and len(query) >= 1:
                 processed.append((query, pos))
 
     return processed
@@ -62,7 +62,7 @@ def main():
     parser.add_argument("--input_dir", type=str, required=True)
     parser.add_argument("--output_file", type=str, required=True)
     parser.add_argument("--size", type=int, default=1000)
-    parser.add_argument("--minimum_len", type=int, default=0)
+    parser.add_argument("--minimum_len", type=int, default=1)
 
     args = parser.parse_args()
 

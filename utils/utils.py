@@ -12,6 +12,7 @@ def set_seed(seed):
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
 
+
 def _cleansing(text):
     # email 제거
     pattern = '([a-zA-Z0-9\_.+-]+@[a-zA-Z0-9-]+.[a-zA-Z0-9-.]+)'
@@ -26,8 +27,8 @@ def _cleansing(text):
     pattern = '\[[\d]\]'
     text = re.sub(pattern=pattern, repl='', string=text)
     # \r, \n 제거
-    pattern = '[\r|\n]'
-    text = re.sub(pattern=pattern, repl='', string=text)
+    pattern = '[\r|\n|\t]'
+    text = re.sub(pattern=pattern, repl=' ', string=text)
     # 특수기호 제거
     pattern = '[^\w\s.]'
     text = re.sub(pattern=pattern, repl='', string=text)
@@ -38,4 +39,4 @@ def _cleansing(text):
     pattern = re.compile(r'\s{2,}')
     text = re.sub(pattern=pattern, repl='', string=text)
 
-    return text
+    return text.strip()
