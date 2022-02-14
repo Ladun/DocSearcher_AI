@@ -1,10 +1,19 @@
-from typing import List
+
 import logging
+from tqdm import tqdm
 
 import torch
 from torch.utils.data import Dataset
 
 from modeling.tokenization import QueryTokenizer, DocTokenizer
+
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
+    datefmt="%m/%d/%Y %H:%M:%S",
+    level=logging.INFO,
+)
 
 
 class SearchDataFeature:
@@ -27,10 +36,13 @@ class SearcherDataset(Dataset):
         self.features = self._construct_features(dataset_path)
 
     def _construct_features(self, dataset_path):
+        logger.info("Dataset construct feature")
         features = []
-        reader = open(dataset_path, mode='r', encoding='utf-8')
+        with open(dataset_path, mode='r', encoding='utf-8') as f:
+            lines = f.readlines()
+        logger.info(f"Data size = {len(lines)}")
 
-        for line in reader:
+        for line in tqdm(lines):
             query, pos, neg = line.strip().split('\t')
 
             Q_ids, Q_mask = self.query_tokenizer.tensorize([query])
@@ -48,7 +60,6 @@ class SearcherDataset(Dataset):
         return len(self.features)
 
     def __getitem__(self, idx):
-
         feature = self.features[idx]
         Q_ids, Q_mask = feature.query_ids, feature.query_mask
         D_ids, D_mask = feature.doc_ids, feature.doc_mask
@@ -61,16 +72,28 @@ class SearcherDataset(Dataset):
 
 def search_dataset_collate_fn(batch):
 
-    # Q_ids, Q_mask => (bs, query_len)
+    # Get query ids and mask
+    # Q_ids, Q_mask => (2 * bs, query_len)
     Q_ids, Q_mask = (
         torch.cat([b["query"][0] for b in batch], dim=0),
         torch.cat([b["query"][1] for b in batch], dim=0)
     )
-    # D_ids, D_mask => (2, bs, doc_len)
-    D_ids, D_mask = (
-        torch.cat([b["doc"][0].unsqueeze(1) for b in batch], dim=1),
-        torch.cat([b["doc"][1].unsqueeze(1) for b in batch], dim=1)
-    )
+
+    # Get document ids and mask
+    doc_maxlen = max([b["doc"][0].size(1) for b in batch])
+
+    # D_ids, D_mask => (2 * bs, doc_len)
+    D_ids = torch.zeros((2, len(batch), doc_maxlen), dtype=torch.int64)
+    D_mask = torch.zeros((2, len(batch), doc_maxlen), dtype=torch.int64)
+    for i, b in enumerate(batch):
+        d_len = b["doc"][0].size(1)
+        D_ids[:, i:i + 1, :d_len] = b["doc"][0].unsqueeze(1)
+        D_mask[:, i:i + 1, :d_len] = b["doc"][1].unsqueeze(1)
+
+    # D_ids, D_mask = (
+    #     torch.cat([b["doc"][0].unsqueeze(1) for b in batch], dim=1),
+    #     torch.cat([b["doc"][1].unsqueeze(1) for b in batch], dim=1)
+    # )
 
     # Compute max among {length of i^th positive, length of i^th negative} for i \in N
     maxlens = D_mask.sum(-1).max(0).values
