@@ -5,32 +5,7 @@ from glob import glob
 from tqdm import tqdm
 import os
 
-
-def _cleansing(text):
-    # email 제거
-    pattern = '([a-zA-Z0-9\_.+-]+@[a-zA-Z0-9-]+.[a-zA-Z0-9-.]+)'
-    text = re.sub(pattern=pattern, repl='', string=text)
-    # url 제거
-    pattern = '(?:https?|ftp|file)://(?:[a-zA-Z]|[0-9]|[$\-@\.&+:/?=]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
-    text = re.sub(pattern=pattern, repl='', string=text)
-    # html 태그 제거
-    pattern = '<[^>]*>'
-    text = re.sub(pattern=pattern, repl='', string=text)
-    # \r, \n 제거
-    pattern = '[\r|\n]'
-    text = re.sub(pattern=pattern, repl='', string=text)
-    # 특수기호 제거
-    pattern = '[^\w\s.]'
-    text = re.sub(pattern=pattern, repl='', string=text)
-    # 한자 제거
-    pattern = '[一-龥]'
-    text = re.sub(pattern=pattern, repl='', string=text)
-    # 이중 space 제거
-    pattern = re.compile(r'\s{2,}')
-    text = re.sub(pattern=pattern, repl='', string=text)
-
-    return text
-
+from utils.utils import _cleansing
 
 def preprocess_raw_data(lines):
     ret = []
