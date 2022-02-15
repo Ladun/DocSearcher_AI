@@ -13,6 +13,13 @@ def set_seed(seed):
     torch.cuda.manual_seed(seed)
 
 
+def print_args(args, logger):
+    logger.info('<Parsed arguments>')
+    for k, v in vars(args).items():
+        logger.info('{}: {}'.format(k, v))
+    logger.info('')
+
+
 def _cleansing(text):
     # email 제거
     pattern = '([a-zA-Z0-9\_.+-]+@[a-zA-Z0-9-]+.[a-zA-Z0-9-.]+)'

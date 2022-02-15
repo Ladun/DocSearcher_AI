@@ -1,5 +1,4 @@
 
-
 import os
 from tqdm import tqdm
 from glob import glob
@@ -7,11 +6,12 @@ import logging
 
 import torch
 
-from modeling.model_inference import ModelInference
-from retrieval.document_struct import DocumentStruct
+from transformers import BertTokenizerFast
 
+from modeling.model_inference import ModelInference
 from modeling.colbert import ColBERT
 from modeling.tokenization import QueryTokenizer, DocTokenizer
+from retrieving.document_struct import DocumentStruct
 from utils.time_log import TimeMeasure
 
 logger = logging.getLogger(__name__)
@@ -154,8 +154,29 @@ class RetrievalModule:
             Q = self.inferencer.query_from_texts(query)
 
         with time_measure as tm:
-            tm.set_prefix("Query retrieval time: ")
+            tm.set_prefix("Query retrieving time: ")
             passages = self.documents[title].retrieval(Q, faiss_depth)
 
         return passages
 
+
+def get_retrieval_module(args):
+    base_tokenizer = BertTokenizerFast.from_pretrained(args.checkpoint_path)
+    query_tok = QueryTokenizer(query_maxlen=args.query_maxlen, tokenizer=base_tokenizer)
+    doc_tok = DocTokenizer(doc_maxlen=args.doc_maxlen, tokenizer=base_tokenizer)
+
+    # ColBERT
+    colbert = ColBERT.from_pretrained(args.checkpoint_path,
+                                      device=args.device,
+                                      query_maxlen=args.query_maxlen,
+                                      doc_maxlen=args.doc_maxlen,
+                                      mask_punctuation=args.mask_punctuation,
+                                      dim=args.dim,
+                                      similarity_metric=args.similarity)
+    colbert = colbert.to(args.device)
+
+    # Load retrieving Model
+    retrieval = RetrievalModule(colbert, query_tok, doc_tok,
+                                doc_batch_size=args.retrieval_batch_size)
+
+    return retrieval

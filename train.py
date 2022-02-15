@@ -17,7 +17,7 @@ from transformers import (
 from modeling.colbert import ColBERT
 from modeling.tokenization import QueryTokenizer, DocTokenizer
 from training.custom_dataset import SearcherDataset, search_dataset_collate_fn
-from utils import Arguments, set_seed
+from utils import Arguments, set_seed, print_args
 
 logger = logging.getLogger(__name__)
 
@@ -194,10 +194,7 @@ def main():
         level=logging.INFO,
     )
 
-    logger.info('<Parsed arguments>')
-    for k, v in vars(args).items():
-        logger.info('{}: {}'.format(k, v))
-    logger.info('')
+    print_args(args, logger)
 
     if os.path.exists(args.checkpoint_path):
         args = torch.load(os.path.join(args.checkpoint_path, "training_args.bin"))

@@ -60,7 +60,7 @@ class DocumentStruct:
             "texts": self.texts,
             "doclens": self.doclens,
             "embeddings": self.embeddings
-        }, bin_path)
+        }, bin_path, pickle_protocol=4)
 
         faiss.write_index(self.index, index_path)
 
