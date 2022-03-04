@@ -1,4 +1,5 @@
 
+from typing import List
 import logging
 from tqdm import tqdm
 
@@ -9,11 +10,6 @@ from modeling.tokenization import QueryTokenizer, DocTokenizer
 
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(
-    format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
-    datefmt="%m/%d/%Y %H:%M:%S",
-    level=logging.INFO,
-)
 
 
 class SearchDataFeature:
@@ -26,20 +22,18 @@ class SearchDataFeature:
 
 class SearcherDataset(Dataset):
     def __init__(self,
-                 dataset_path : str,
+                 lines: List[str],
                  query_tokenizer: QueryTokenizer,
                  doc_tokenizer: DocTokenizer):
 
         self.query_tokenizer = query_tokenizer
         self.doc_tokenizer = doc_tokenizer
 
-        self.features = self._construct_features(dataset_path)
+        self.features = self._construct_features(lines)
 
-    def _construct_features(self, dataset_path):
+    def _construct_features(self, lines):
         logger.info("Dataset construct feature")
         features = []
-        with open(dataset_path, mode='r', encoding='utf-8') as f:
-            lines = f.readlines()
         logger.info(f"Data size = {len(lines)}")
 
         for line in tqdm(lines):

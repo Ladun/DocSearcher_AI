@@ -46,6 +46,7 @@ class Arguments:
         self.add_argument("--retrieval_batch_size", default=2, type=int)
         self.add_argument("--index_dir", type=str, required=True,
                           help="path to index files")
+        self.add_argument("--retrieval_verbose", default=False, action='store_true')
 
     def add_index_parameters(self):
         self.add_argument("--document_paths", nargs='+', default=None,

@@ -57,6 +57,18 @@ class RetrievalModule:
         for key in self.documents.keys():
             self.documents[key].save_documents(path)
 
+    def load_document(self, path):
+        logger.info(f"Load document struct from {path}")
+        doc_struct = DocumentStruct.load_documents(path)
+
+        index_path = path.split(".")[0] + ".index"
+        if os.path.exists(index_path):
+            logger.info(f"Load document struct index from {index_path}")
+            doc_struct.load_index(index_path)
+        else:
+            doc_struct.construct_index()
+        self.documents[doc_struct.title] = doc_struct
+
     def load_documents(self, path):
         if os.path.exists(path):
             if not os.path.isdir(path):
@@ -66,16 +78,7 @@ class RetrievalModule:
 
         files = glob(f"{path}/*.bin")
         for file in files:
-            logger.info(f"Load document struct from {file}")
-            doc_struct = DocumentStruct.load_documents(file)
-
-            index_path = file.split(".")[0] + ".index"
-            if os.path.exists(index_path):
-                logger.info(f"Load document struct index from {index_path}")
-                doc_struct.load_index(index_path)
-            else:
-                doc_struct.construct_index()
-            self.documents[doc_struct.title] = doc_struct
+            self.load_document(file)
 
     def _preprocess_lines(self, lines):
         doc_bundles = []
@@ -92,6 +95,49 @@ class RetrievalModule:
 
         return doc_bundles
 
+    def add_documents_by_collections(self, collections_path, file_name):
+
+        if file_name is None:
+            file_name = os.path.split(collections_path)[-1].split(".")[0]
+
+        with open(collections_path, mode="r", encoding='utf-8') as f:
+            lines = f.readlines()
+
+        time_measure = TimeMeasure(logger)
+
+        # preprocessing lines
+        with time_measure as tm:
+            tm.set_prefix("Preprocessing lines time: ")
+            lines = [line.strip().split("\t")[1] for line in lines]
+
+        with time_measure as tm:
+            tm.set_prefix("Embedding lines time: ")
+            doc_embeddings = []
+            doc_texts = []
+            doc_lens = []
+            for offset in tqdm(range(0, len(lines), self.doc_batch_size)):
+                endpos = min(len(lines), offset + self.doc_batch_size)
+
+                # Get embeddings
+                bundle = lines[offset:endpos]
+                D = self.inferencer.doc_from_texts(bundle)
+
+                _doc_lens = [len(line) for line in bundle]
+                D = [D[i, :l].cpu() for i, l in enumerate(_doc_lens)]
+
+                doc_embeddings.extend(D)
+                doc_texts.extend(bundle)
+                doc_lens.extend(_doc_lens)
+
+            doc_embeddings = torch.cat(doc_embeddings)
+
+        with time_measure as tm:
+            tm.set_prefix("Create DocumentStruct time: ")
+            doc_str = DocumentStruct(file_name, doc_lens, doc_texts, doc_embeddings.numpy())
+            doc_str.construct_index()
+
+        self.documents[file_name] = doc_str
+
     def add_documents(self, preprocessed_text_path, file_name=None):
         '''
 
@@ -99,6 +145,10 @@ class RetrievalModule:
         :param file_name: Name to use instead of file_path.
         :return:
         '''
+
+        if file_name is None:
+            file_name = os.path.split(preprocessed_text_path)[-1].split(".")[0]
+
         with open(preprocessed_text_path, mode="r", encoding='utf-8') as f:
             lines = f.readlines()
 
@@ -135,12 +185,9 @@ class RetrievalModule:
             doc_str = DocumentStruct(file_name, doc_lens, doc_texts, doc_embeddings.numpy())
             doc_str.construct_index()
 
-        if file_name is None:
-            file_name = os.path.split(preprocessed_text_path)[-1].split(".")[0]
-
         self.documents[file_name] = doc_str
 
-    def retrieval(self, query, title, faiss_depth=100):
+    def retrieval(self, query, title, faiss_depth=100, verbose=False):
 
         if not title in self.documents.keys():
             raise Exception("unknown document title")
@@ -155,9 +202,9 @@ class RetrievalModule:
 
         with time_measure as tm:
             tm.set_prefix("Query retrieving time: ")
-            passages = self.documents[title].retrieval(Q, faiss_depth)
+            passages, pids = self.documents[title].retrieval(Q, faiss_depth, verbose)
 
-        return passages
+        return passages, pids
 
 
 def get_retrieval_module(args):

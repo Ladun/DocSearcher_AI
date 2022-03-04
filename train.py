@@ -49,7 +49,11 @@ def load_components(args):
     doc_tok = DocTokenizer(doc_maxlen=args.doc_maxlen, tokenizer=base_tokenizer)
 
     # Load dataset
-    train_dataset = SearcherDataset(dataset_path=args.train_file,
+
+    with open(args.train_file, mode='r', encoding='utf-8') as f:
+        lines = f.readlines()
+
+    train_dataset = SearcherDataset(lines=lines,
                                     query_tokenizer=query_tok,
                                     doc_tokenizer=doc_tok)
     train_sampler = RandomSampler(train_dataset)
@@ -104,18 +108,18 @@ def load_components(args):
         except ValueError:
             logger.info("  Starting fine-tuning.")
 
-    return (colbert, base_tokenizer, train_dataset, train_dataloader, optimizer, scheduler),\
+    return (colbert, base_tokenizer, optimizer, scheduler, train_dataset, train_dataloader),\
            (global_step, epochs_trained, steps_trained_in_current_epoch, t_total)
 
 
 def train(args):
 
     # Load Training components
-    train_component1, train_component2 = load_components(args)
+    model_component, other_component = load_components(args)
 
     # Split training components
-    colbert, base_tokenizer, train_dataset, train_dataloader, optimizer, scheduler = train_component1
-    global_step, epochs_trained, steps_trained_in_current_epoch, t_total = train_component2
+    colbert, base_tokenizer, optimizer, scheduler, train_dataset, train_dataloader= model_component
+    global_step, epochs_trained, steps_trained_in_current_epoch, t_total = other_component
 
     # Define values
     tb_writer = SummaryWriter()
@@ -136,6 +140,9 @@ def train(args):
     optimizer.zero_grad()
     train_iterator = trange(epochs_trained, int(args.num_train_epochs), desc="Epoch")
     for epoch in train_iterator:
+
+        # Do train
+        colbert.train()
         epoch_iterator = tqdm(train_dataloader, desc="Iteration")
         for step, (batch) in enumerate(epoch_iterator):
 
@@ -166,7 +173,6 @@ def train(args):
 
                 # Log metrics
                 if args.logging_steps > 0 and global_step % args.logging_steps == 0:
-
                     tb_writer.add_scalar("lr", scheduler.get_lr()[0], global_step)
                     tb_writer.add_scalar("loss", (tr_loss - logging_loss) / args.logging_steps, global_step)
                     logging_loss = tr_loss
@@ -176,6 +182,10 @@ def train(args):
                     save_checkpoint(args, global_step,
                                     model=colbert, optimizer=optimizer,
                                     scheduler=scheduler, tokenizer=base_tokenizer)
+
+    save_checkpoint(args, global_step,
+                    model=colbert, optimizer=optimizer,
+                    scheduler=scheduler, tokenizer=base_tokenizer)
 
 
 def main():

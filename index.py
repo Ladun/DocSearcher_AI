@@ -16,6 +16,7 @@ def main():
     parser.add_index_parameters()
 
     parser.add_argument("--checkpoint_path", type=str, required=True)
+    parser.add_argument("--by_collections", action="store_true", default=False)
     args = parser.parse()
 
     print_args(args, logger)
@@ -49,7 +50,10 @@ def main():
         file_name = os.path.split(file)[1]
         file_name = os.path.splitext(file_name)[0]
         logger.info(f"Make index '{file}'")
-        retrieval.add_documents(file, file_name)
+        if args.by_collections:
+            retrieval.add_documents_by_collections(file, file_name)
+        else:
+            retrieval.add_documents(file, file_name)
         retrieval.save_document(args.index_dir, file_name)
 
 

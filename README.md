@@ -13,7 +13,7 @@ python utils/preprocess_raw.py
 ```
 
 ## Training
-
+Training requires a list of <query, positive passage, negative passage> tab-separated triples.
 
 ```
 python train.py --train_file=/path/to/train_file 
@@ -31,7 +31,19 @@ python index.py --checkpoint_path=/path/to/*checkpoint_directory* \
 ### Do retrieval
 
 ```
+python retrieval.py --checkpoint_path=/path/to/*checkpoint_directory* \
+                    --document_name="<document_name>" \
+                    --index_dir=/path/to/*index_dir_to_save* \
+                    --query="<query>" \
+```
 
+## Evaluate
+
+```
+python evaluate.py --checkpoint_path=/path/to/*checkpoint_directory* \
+                   --document_name="<document_name>" \
+                   --index_dir=/path/to/*index_dir_to_save* \
+                   --query="<query>" \
 ```
 
 ## Reference

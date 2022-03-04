@@ -33,11 +33,18 @@ def main():
     # Load retrieving Model
     logger.info("[Load retrieval_module]===========")
     retrieval = get_retrieval_module(args)
-    retrieval.load_documents(args.index_dir)
+
+    document_path = os.path.join(args.index_dir, f"{args.document_name}.bin")
+    if os.path.exists(document_path):
+        retrieval.load_document(document_path)
+    else:
+        logger.info(f"Wrong document name")
+        exit(0)
 
     # Get Files
     logger.info("[Do retreival]===========")
-    passages = retrieval.retrieval(args.query, args.document_name, faiss_depth=args.faiss_depth)
+    passages = retrieval.retrieval(args.query, args.document_name,
+                                   faiss_depth=args.faiss_depth, verbose=args.retrieval_verbose)
 
     result = []
     for q, p in zip(args.query, passages):
@@ -48,6 +55,7 @@ def main():
 
     with open("retrieval_result.json", "w", encoding="utf-8") as f:
         json.dump(result, f)
+    logger.info(result)
 
 
 if __name__ == "__main__":

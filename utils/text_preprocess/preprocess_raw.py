@@ -7,6 +7,7 @@ import os
 
 from utils.utils import _cleansing
 
+
 def preprocess_raw_data(lines):
     ret = []
     for line in tqdm(lines):
