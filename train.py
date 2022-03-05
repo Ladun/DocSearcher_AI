@@ -44,12 +44,13 @@ def load_components(args):
     if os.path.exists(args.checkpoint_path):
         base_path = args.checkpoint_path
 
+    logger.info(f"base_path={base_path}")
+
     base_tokenizer = BertTokenizerFast.from_pretrained(base_path)
     query_tok = QueryTokenizer(query_maxlen=args.query_maxlen, tokenizer=base_tokenizer)
     doc_tok = DocTokenizer(doc_maxlen=args.doc_maxlen, tokenizer=base_tokenizer)
 
     # Load dataset
-
     with open(args.train_file, mode='r', encoding='utf-8') as f:
         lines = f.readlines()
 
@@ -205,9 +206,6 @@ def main():
     )
 
     print_args(args, logger)
-
-    if os.path.exists(args.checkpoint_path):
-        args = torch.load(os.path.join(args.checkpoint_path, "training_args.bin"))
 
     train(args)
 
